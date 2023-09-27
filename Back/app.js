@@ -9,7 +9,7 @@ const { MongoClient } = require('mongodb');
 const uri = 'mongodb://localhost:27017/webpage_data';
 
 // Create a new MongoClient
-const client = new MOngoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Connect to the database
 async function connectToDatabase() {
@@ -29,17 +29,22 @@ app.use(bodyParser.urlencoded({ extended: true}))
 app.use(bodyParser.json());
 
 // Define route for handling POST requests (form submission)
-app.post('/submit', (req, res) => {
+app.post('/submit', async (req, res) => {
     // Access data from submitted form
     const formData = req.body; 
-    // Log received data to the console
-    console.log('Received form data: ', formData);
-    // Process data from form and store in database
-        // TODO
-    
 
-    // Confirmation
-    res.status(200).send('Form submitted successfully!');
+    // Access database
+    try {
+        const database = client.db('webpage_data');
+        const collection = database.collection('form_entries');
+
+        await collection.insertOne(formData);
+        console.log('Form data stored in database', formData);  // Confirmation message
+        res.status(200).send('Form submitted and data stored successfully');
+    } catch (error) {
+        console.error('Error storing form data:', error);   // Error message
+        res.status(500).send('Error storing form data');
+    }
 });
 
 // Start server to listen for messages
